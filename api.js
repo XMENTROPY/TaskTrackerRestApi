@@ -11,20 +11,25 @@ app.use(cors());
 //GET Requests
 app.get('/Test', (req, res) => {
   console.log('GET Request Received')
-  Db.getTable('Orders').then((data) => {
+  Db.getTable('test').then((data) => {
     res.send(data[0]);
   })
   console.log('GET Response Sent')
 });
 
 //POST Requests
-app.post('/Test', function(req, res) {
-  console.log('POST Request Received')
-  let data = {...req.body}
-  Db.addOrder(data)
-  res.end();
-  console.log('POST Response Sent')
-});
+
+// SO the thing is I need to figure out how to get the new table creation data into a form that will work to create the table strucrhe correctly.
+
+app.post('/Create', (req, res) => {
+  console.log('POST REQUEST FOR NEW TABLE RECEIVED')
+
+  Db.createTable(req.body).then((data) => {
+    res.end()
+  })
+  console.log('POST REQUEST FOR NEW TABLE FINISHED')
+
+})
 
 //Listen
 app.listen(3001, function(){

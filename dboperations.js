@@ -1,15 +1,10 @@
 const  sql = require('mssql');
 
-const serverName = 'lions-services-data-webapp.database.windows.net'
-// const serverName = <TO BE DETERMINED THIS IS THE NAME OF THE LIONS SERVER>
-
-tableName = 'Orders'
-
 //Sql Database Configuration
 const  config = {
-  user:  'website_login', // sql user
-  password:  '5TYt8#kA3s*jvtMEa0DC3PP^', //sql user password
-  server:  serverName,
+  user:  'GeneralUser', // sql user
+  password:  'rZln04HZ3$*B', //sql user password
+  server:  'task-tracker.database.windows.net',
   database:  'Production',
   options: {
     trustedconnection:  true,
@@ -22,7 +17,7 @@ const  config = {
 async  function  getTable(tableName) {
   try {
     let  pool = await  sql.connect(config);
-    let  products = await  pool.request().query('SELECT * from '+tableName);
+    let  products = await  pool.request().query('SELECT * FROM '+tableName);
     return  products.recordsets;
   }
   catch (error) {
@@ -30,25 +25,29 @@ async  function  getTable(tableName) {
   }
 }
 
-//POST Functions for SQL Database
-async  function  addOrder(order) {
+// Creates a new table in the local database and then bulk inserts it to the sql server
+// tableStructure is of the sort of form, [{col1:{name: 'col1', dataType: sql.Int}}] or something like that
+async function createTable(tableName, tableStructure) {
   try {
-    let  pool = await  sql.connect(config);
-    let  insertProduct = await  pool.request()
-      .input('Id', sql.Int, order.id)
-      .input('Title', sql.NVarChar, order.title)
-      .input('Quantity', sql.Int, order.quantity)
-      .input('Message', sql.NVarChar, order.message)
-      .input('City', sql.NVarChar, order.city)
-    .query('INSERT INTO '+tableName+' VALUES (@Id, @Title, @Quantity, @Message, @City);')
-    return  insertProduct.recordsets;
-  }
-  catch (error) {
-    console.log(error);
-  }
+    let pool = await sql.connect(config);
+    const table = new sql.Table(tableName)
+    table.create = true
+
+    for (col in tableStructure) {
+      table.columns.add(col.name, col.dataType, {nullable: true })
+    }
+  
+    const request = new sql.Request()
+    request.bulk(table, (err, result) => {
+    console.log(err)
+    })
+    }
+    catch (error) {
+      console.log(error)
+    }
 }
 
 module.exports = {
   getTable:  getTable,
-  addOrder:  addOrder
+  createTable: createTable
 }
